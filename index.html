@@ -5,7 +5,8 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#272046;--card:#3a3160;--ink:#f3eeff}}
 :root[data-theme="dark"]{--bg:#272046;--card:#3a3160;--ink:#f3eeff}
 *{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:'Trebuchet MS','Segoe UI',system-ui,sans-serif}
-.v{display:none;height:100%;flex-direction:column;gap:10px;padding:10px;overflow-y:auto;overflow-x:hidden}.v.on{display:flex}
+.v{display:none;height:100%;flex-direction:column;gap:10px;padding:10px 10px 38px;overflow-y:auto;overflow-x:hidden}.v.on{display:flex}
+.app-footer{position:fixed;left:0;right:0;bottom:0;padding:7px 10px calc(7px + env(safe-area-inset-bottom,0px));text-align:center;font-size:12px;line-height:1.2;color:var(--ink);background:var(--bg);opacity:.88;z-index:8;pointer-events:none;border-top:1px solid #00000010}
 .btn{min-height:48px;border:0;border-radius:24px;padding:0 18px;font:700 16px inherit;font-family:inherit;background:var(--card);color:var(--ink);box-shadow:0 3px 0 #0002;cursor:pointer}
 .btn:active{transform:translateY(2px)}.btn:disabled{opacity:.35}.p{background:var(--pri);color:#fff}.s{background:var(--sec);color:#123}.y{background:var(--yel);color:#432}.l{background:var(--lil);color:#324}
 h1{font-size:34px;margin:6px 0;text-align:center}h2{margin:4px 0}.c{text-align:center}
@@ -35,7 +36,7 @@ h1{font-size:34px;margin:6px 0;text-align:center}h2{margin:4px 0}.c{text-align:c
 <section class="v" id="fin"><h2 class="c" id="fname"></h2><div id="fstage"></div><div class="two"><button class="btn p" data-a="save">SALVAR PERSONAGEM</button><button class="btn s" data-a="png">SALVAR IMAGEM</button><button class="btn" data-go="ed">CONTINUAR EDITANDO</button><button class="btn y" data-a="new">CRIAR OUTRO</button><button class="btn l" data-a="share">COMPARTILHAR</button><button class="btn" data-a="home">VOLTAR AO INÍCIO</button></div></section>
 <section class="v" id="gal"><h2 class="c">🖼️ Minha Galeria</h2><div class="two"><button class="btn p" data-a="new">➕ CRIAR NOVO</button><button class="btn" data-a="home">← INÍCIO</button><button class="btn" data-a="exp">⬇ Exportar JSON</button><button class="btn" data-a="imp">⬆ Importar JSON</button></div><div class="grid" id="grid"></div><input type="file" id="fi" accept=".json,application/json" hidden></section>
 <section class="v" id="guide"><h2 class="c">Como brincar</h2><ul class="guide" style="padding:0"><li>✏️ <b>Crie</b> um personagem e toque nas peças para trocar.</li><li>🎨 Toque nas bolinhas de cor para mudar as cores.</li><li>↶ ↷ Desfaça e refaça, ou use 🎲 para surpresa.</li><li>💾 <b>Salve</b> na galeria para continuar depois.</li><li>🖼️ <b>Salve a imagem</b> ou compartilhe.</li><li>🕵️ Invente nomes e histórias, e brinque de adivinhar quem inspirou cada personagem!</li></ul><button class="btn p" data-a="home">VOLTAR AO INÍCIO</button></section>
-<div id="modal"></div><div id="toast"></div>
+<footer class="app-footer">Desenvolvido pelo Papai para o Heitor</footer><div id="modal"></div><div id="toast"></div>
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const D='#3b1f2b',X=[125,175],m=f=>X.map(f).join(''),st=(d,w=5,c=D)=>`<path d="${d}" stroke="${c}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,P=(d,f)=>`<path d="${d}" fill="${f}"/>`,C=(x,y,r,f)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${f}"/>`,Rc=(x,y,w,h,f,r=0)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${f}"/>`,E=(x,y,a,b,f)=>`<ellipse cx="${x}" cy="${y}" rx="${a}" ry="${b}" fill="${f}"/>`;
