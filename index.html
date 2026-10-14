@@ -1,4 +1,5 @@
 <!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Meu Mundo Toy</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
 :root{--bg:#eaf6ff;--card:#fff;--ink:#3b3358;--pri:#ff7eb6;--sec:#7ec8ff;--yel:#ffd966;--lil:#d6c2ff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#272046;--card:#3a3160;--ink:#f3eeff}}
@@ -27,7 +28,7 @@ h1{font-size:34px;margin:6px 0;text-align:center}h2{margin:4px 0}.c{text-align:c
 .guide li{background:var(--card);border-radius:16px;padding:12px;margin-bottom:8px;list-style:none;font-size:17px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style></head><body>
-<section class="v on" id="home"><h1>🧸 Meu Mundo Toy</h1><div class="hero" id="hero"></div><div class="c" id="cnt"></div>
+<section class="v on" id="home"><h1>🧸 Meu Mundo Toy</h1><div class="hero" id="hero"></div><div class="c" id="cnt"></div><div class="c" id="sync" style="font-size:13px;opacity:.7"></div>
 <div class="stack"><button class="btn p" data-a="new">✏️ CRIAR PERSONAGEM</button><button class="btn s" data-a="gal">🖼️ MINHA GALERIA</button><button class="btn y" data-a="sur">🎲 PERSONAGEM SURPRESA</button><button class="btn l" data-go="guide">❓ COMO BRINCAR</button></div></section>
 <section class="v" id="ed"><div class="bar"><button class="btn" data-a="home" aria-label="Voltar">←</button><button class="btn" id="un" data-a="undo" aria-label="Desfazer">↶</button><button class="btn" id="re" data-a="redo" aria-label="Refazer">↷</button><button class="btn" data-a="rand" aria-label="Aleatório">🎲</button><button class="btn" data-a="reset" aria-label="Reiniciar categoria">♻️</button><button class="btn" data-a="save" aria-label="Salvar">💾</button></div>
 <div id="stage"></div><div class="row" id="cats"></div><div class="row" id="cols"></div><div class="row" id="opts"></div><button class="btn p" data-a="fin">FINALIZAR ✔</button></section>
@@ -70,7 +71,22 @@ function rndChar(){const c=def(),z={beard:.7,hat:.55,glasses:.6,acc:.5,item:.4};
 function fix(o){const d=def(),c=d,hex=/^#[0-9a-f]{6}$/i;if(!o||typeof o!=='object')return null;CATS.forEach(t=>{if(t.L)c[t.k]=Number.isInteger(o[t.k])&&o[t.k]>=0&&o[t.k]<t.L.length?o[t.k]:d[t.k];if(t.ck)c[t.ck]=hex.test(o[t.ck])?o[t.ck]:d[t.ck]});c.id=/^[\w-]{1,40}$/.test(o.id)?o.id:uid();c.name=typeof o.name==='string'?o.name.slice(0,20):'';c.created=+o.created||Date.now();c.mod=+o.mod||Date.now();return c}
 let cur=def(),hist=[],fut=[],cat=1;
 const all=()=>{try{return(JSON.parse(localStorage.getItem('mmt_v1'))||[]).map(fix).filter(Boolean)}catch{return[]}};
-function put(l){try{localStorage.setItem('mmt_v1',JSON.stringify(l));return true}catch{toast('Armazenamento cheio! Nada foi apagado. Exclua ou exporte algo.');return false}}
+const SB_URL='https://lvfhxcmnqylioalsluvy.supabase.co',SB_KEY='sb_publishable_gZ4FF1BgIlhIzK1b4y91bQ_YPw9WfXN',TB='toy_characters';
+let sb=null;try{sb=window.supabase.createClient(SB_URL,SB_KEY)}catch{}
+const lsGet=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},setSync=t=>{const e=$('#sync');if(e)e.textContent=t},row=c=>({id:c.id,name:c.name,data:c,updated_at:new Date(c.mod).toISOString()});
+async function login(){if(!sb)return false;const{data:{session}}=await sb.auth.getSession();if(session)return true;return !(await sb.auth.signInAnonymously()).error}
+async function pull(){try{if(!await login())throw 0;const del=lsGet('mmt_del',[]);
+if(del.length){const d=await sb.from(TB).delete().in('id',del);if(d.error)throw d.error;localStorage.setItem('mmt_del','[]')}
+const r=await sb.from(TB).select('id,data');if(r.error)throw r.error;
+const map=new Map(all().map(c=>[c.id,c])),cm=new Map();
+(r.data||[]).forEach(x=>{const c=fix(x.data);if(!c)return;cm.set(c.id,c.mod);const l=map.get(c.id);if(!l||c.mod>l.mod)map.set(c.id,c)});
+const merged=[...map.values()];try{localStorage.setItem('mmt_v1',JSON.stringify(merged))}catch{}
+const up=merged.filter(c=>cm.get(c.id)!==c.mod);if(up.length){const u=await sb.from(TB).upsert(up.map(row));if(u.error)throw u.error}
+setSync('☁️ Sincronizado');if($('#home').classList.contains('on'))homeR();if($('#gal').classList.contains('on'))galR()}catch{setSync('📴 Salvo só neste aparelho')}}
+let pt;const later=()=>{clearTimeout(pt);pt=setTimeout(pull,800)};
+function put(l){const prev=all();try{localStorage.setItem('mmt_v1',JSON.stringify(l))}catch{toast('Armazenamento cheio! Nada foi apagado. Exclua ou exporte algo.');return false}
+const ids=new Set(l.map(c=>c.id)),gone=prev.filter(c=>!ids.has(c.id)).map(c=>c.id);
+if(gone.length)localStorage.setItem('mmt_del',JSON.stringify([...new Set([...lsGet('mmt_del',[]),...gone])]));later();return true}
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2600)}
 function modal(h){return new Promise(r=>{const e=$('#modal');e.innerHTML=`<div class="box">${h}</div>`;e.classList.add('on');e.onclick=ev=>{const b=ev.target.closest('[data-r]');if(!b)return;e.classList.remove('on');r(b.dataset.r==='ok'?(e.querySelector('input,textarea')?.value??true):null)}})}
 const ask=(t,v)=>modal(`<h3>${t}</h3><input maxlength="20" value="${esc(v)}" placeholder="Ex.: Capitão Bolinha"><div class="two"><button class="btn" data-r="no">Cancelar</button><button class="btn p" data-r="ok">OK</button></div>`);
@@ -97,5 +113,5 @@ async del(id){if(await conf('Excluir este personagem?')){if(put(all().filter(x=>
 async exp(){const t=JSON.stringify({app:'meu-mundo-toy',v:1,chars:all()},null,1);try{const u=URL.createObjectURL(new Blob([t],{type:'application/json'})),a=document.createElement('a');a.href=u;a.download='meu-mundo-toy.json';a.click()}catch{}await modal(`<h3>Backup dos personagens</h3><p>Copie este texto para guardar:</p><textarea rows="8" readonly>${esc(t)}</textarea><button class="btn p" data-r="no">Fechar</button>`)},imp:()=>$('#fi').click()};
 $('#fi').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const j=JSON.parse(await f.text()),a=Array.isArray(j)?j:j.chars;if(!Array.isArray(a))throw 0;const l=all(),ids=new Set(l.map(x=>x.id));let n=0;a.forEach(o=>{const c=fix(o);if(!c)return;if(ids.has(c.id))c.id=uid();ids.add(c.id);l.push(c);n++});if(!n)throw 0;if(put(l)){toast(n+' importado(s)!');galR()}}catch{toast('Arquivo inválido.')}};
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;if(d.go)go(d.go);else if(d.a)A[d.a](d.id);else if(d.cat){cat=+d.cat;ui()}else if(d.i!==undefined)chg({[CATS[cat].k]:+d.i});else if(d.c)chg({[CATS[cat].ck]:d.c})});
-homeR();
+homeR();pull();addEventListener("online",pull);
 </script></body></html>
